@@ -1,3 +1,14 @@
+####################
+# Run this script from the command line
+# It will request the name/path of your input
+# The name/desired path of your output
+# Then it will request the band numbers for Red and NIR respectively
+# Much of this code leans on the GDAL course led by Dr. Peter Bunting
+# This can be found at: http://learningzone.rspsoc.org.uk/index.php/Learning-Materials/Python-Scripting/9.4-Calculate-NDVI-using-GDAL 
+####################
+
+# all of this info can easily be found using gdalinfo on your input file prior to running the script
+
 import sys, os, struct
 import osgeo.gdal as gdal
 
