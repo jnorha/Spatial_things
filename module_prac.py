@@ -1,3 +1,7 @@
+#Testing of ndvi_c import and application taking arguments. 
+# ndvi_c takes 4 arguments: The first is your input GTiff, second is what/where you want your output to go, then an integer describing 
+# which band is associated to the Red wavelength, and finally which band is associated with the NIR wavelengths.
+
 import ndvi_module
 
 
