@@ -2,9 +2,10 @@ import sys, os, struct
 import osgeo.gdal as gdal
 
 # Create and run Class Object NDVI calculator
-# Main function to import form this module is ndvi_c
+# Main function to import from this module is ndvi_c
 
 # ndvi_c takes 4 arguments, first is the INPUT FILE, then desired OUTPUT FILE, then RED BAND #, then NIR BAND #
+# these can be found using gdalinfo on your input file prior to running this script
 
 # -------------------------------------------------------- #
 
