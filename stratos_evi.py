@@ -1,12 +1,14 @@
 import sys, os, struct
 import osgeo.gdal as gdal
 
-# Create and run Class Object savi calculator
-# Main function to import form this module is savi_c
+# Create and run EVI calculator function
+# Main function to import form this module is evi_c
 
-# Adjust the value of L to reflect the amount of vegetation. ---- Lower the L value = the less vegetative presence ------
+# You may have to change coefficients depending on the sensor type. However, you can start with only designating the band numbers in the arguments
 
-# savi_c takes 4 arguments, first is the INPUT FILE, then desired OUTPUT FILE, then RED BAND #, then NIR BAND #
+# evi_c takes 5 arguments, first is the INPUT FILE, then desired OUTPUT FILE, then RED BAND #, then NIR BAND #, then BLUE BAND #
+
+# You can also change the aerosol scattering coefficients if you'd like. The defaults used in this function are: Soil background (L) = 1, aersol 1 (C1) = 6, aersol 2 (C2) = 7.5
 
 # -------------------------------------------------------- #
 
@@ -34,7 +36,7 @@ def createOutputImage(outFilename, inDataset):
 
 # -------------------------------------------------------- #
 
-def savi_c(filePath, outFilePath, b_r, b_nir):
+def evi_c(filePath, outFilePath, b_r, b_nir, b_blue):
     #check to see if input file exists
     if os.path.exists(filePath):
         print "Found input file"
@@ -57,7 +59,8 @@ def savi_c(filePath, outFilePath, b_r, b_nir):
     # RUN gdalinfo on raster to get bands and their respective numbers
     red_band = dataset.GetRasterBand(b_r) # Red band
     nir_band = dataset.GetRasterBand(b_nir) # NIR Band
-    #### NOW WE LOOP THROUGH THE IMAGE, PIXEL BY PIXEL, calculating savi ####
+    blue_band = dataset.GetRasterBand(b_blue) # NIR Band
+    #### NOW WE LOOP THROUGH THE IMAGE, PIXEL BY PIXEL, calculating evi ####
     # retrieve the number of lines within the image
     numLines = red_band.YSize
     # Loop through each line in turn
@@ -73,24 +76,26 @@ def savi_c(filePath, outFilePath, b_r, b_nir):
         nir_scanline = nir_band.ReadRaster( 0, line, nir_band.XSize, 1, nir_band.XSize, 1, gdal.GDT_Float32)
         nir_tuple = struct.unpack('f' * nir_band.XSize, nir_scanline)
 
+        blue_scanline = blue_band.ReadRaster( 0, line, blue_band.XSize, 1, blue_band.XSize, 1, gdal.GDT_Float32)
+        blue_tuple = struct.unpack('f' * blue_band.XSize, blue_scanline)
+
         #Loop through the columns within the image
         for i in range(len(red_tuple)):
-            #calculate the savi for the current pixel.
-            L = 0.5
-            savi_denomer = (nir_tuple[i] + red_tuple[i] + L)
-            savi_numer = (nir_tuple[i] - red_tuple[i])
-            savi = 0
+            #calculate the evi for the current pixel.
+            evi_denomer = (nir_tuple[i] + red_tuple[i])
+            evi_numer = (nir_tuple[i] + 6 * red_tuple[i] - 7.5 * blue_tuple[i] + 1)
+            evi = 0
             #be careful of zero divide
-            if savi_denomer == 0:
-                savi = 0
+            if evi_denomer == 0:
+                evi = 0
             else:
-                savi = (savi_numer/savi_denomer) * (L + 1)
+                evi = 2.5 * (evi_numer/evi_denomer)
             #add the current pixel to the output line
-            outputLine = outputLine + struct.pack('f', savi)
+            outputLine = outputLine + struct.pack('f', evi)
         outDataset.GetRasterBand(1).WriteRaster(0, line, red_band.XSize, 1, outputLine, buf_xsize=red_band.XSize, buf_ysize=1, buf_type=gdal.GDT_Float32)
     # Delete the output line folliwng write
     del outputLine
-    print 'SAVI Calculated and Outputted to File'
+    print 'EVI Calculated and Outputted to File'
 
 
  # -------------------------------------------------------- #
